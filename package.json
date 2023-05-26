@@ -1,0 +1,31 @@
+{
+  "name": "reply-guy",
+  "version": "1.0.0",
+  "description": "Discord bot for interpreting Twitter integration output.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FomTarro/reply-guy.git"
+  },
+  "keywords": [
+    "nodejs",
+    "discord",
+    "twitter"
+  ],
+  "author": "Skeletom",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FomTarro/reply-guy/issues"
+  },
+  "homepage": "https://github.com/FomTarro/reply-guy#readme",
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "express": "^4.18.2",
+    "dotenv": "^10.0.0",
+    "uuid": "^8.3.2",
+    "node": "16.6.1"
+  }
+}
