@@ -3,6 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, Collection, GatewayIntentBits, REST, Routes} = require('discord.js');
 const { AppConfig } = require('./app/app.config');
+const { Config } = require("./app/models/config");
+
+const token = AppConfig.DISCORD_BOT_TOKEN;
+const clientId = AppConfig.DISCORD_BOT_CLIENT_ID;
 
 async function main(){
 
@@ -13,8 +17,6 @@ async function main(){
         GatewayIntentBits.MessageContent,
     ] });
 
-    const token = AppConfig.DISCORD_BOT_TOKEN;
-    const clientId = AppConfig.DISCORD_CLIENT_ID;
 
     // When the client is ready, run this code (only once)
     // We use 'c' for the event parameter to keep it separate from the already defined 'client'
@@ -22,20 +24,21 @@ async function main(){
         console.log(`Ready! Logged in as ${c.user.tag}`);
     });
 
-    /* TODO: 
-        3. Make the channel we post to configurable
-        4. Make a role to ping configurable
-    */
     client.on(Events.MessageCreate, async message => {
-        const filePath = path.join(__dirname, 'configs', `${message.guildId}.json`);
-        const config = JSON.parse(fs.readFileSync(filePath));
-        if(message.author.id === config.author.id 
-        && message.content.includes(config.splitter)){
-            console.log(message.content);
+        const config = loadConfig(message.guildId);
+        if(message.author.id === config.authorID && message.content.includes(config.splitter)){
             const split = message.content.split(config.splitter);
+            // console.log("Splitting...");
             if(split.length > 1) {
-                console.info(`${split.length} - ${split[1]}`);
-                message.reply({ content: split[1]});
+                // find config for the twitter user that is being posted
+                const tracker = config.trackers.find(element => split[1].includes(`twitter.com/${element.twitter}`));
+                if(tracker){
+                    // console.info(`${split.length} - ${split[1]}`);
+                    const channel = await client.channels.fetch(tracker.channelID);
+                    if(channel){
+                        channel.send({ content: `<@&${tracker.roleID}> ${split[1]}` });
+                    }
+                }
             }
         }
     });
@@ -72,6 +75,7 @@ async function main(){
  * @param {Client} client 
  */
 async function publishCommands(client){
+
     client.commands = new Collection();
     const commandsJSON = [];
     const commandsPath = path.join(__dirname, 'app', 'commands');
@@ -89,18 +93,25 @@ async function publishCommands(client){
         }
     }
 
+    const guildIds = ["866887704234950666"]
     // Construct and prepare an instance of the REST module
     const rest = new REST().setToken(token);
     // and deploy your commands!
     (async () => {
         try {
             console.log(`Started refreshing ${commandsJSON.length} application (/) commands.`);
-            // The put method is used to fully refresh all commands in the guild with the current set
-            // const data = await rest.put(
-            //     Routes.applicationGuildCommands(clientId, guildId),
-            //     { body: commandsJSON },
-            // );
-            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+            // // The put method is used to fully refresh all commands in the guild with the current set
+            // // const data = await rest.put(
+            // //     Routes.applicationGuildCommands(clientId, guildId),
+            // //     { body: commandsJSON },
+            // // );
+            // console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+            for(let guildId of guildIds){
+                await rest.put(
+                    Routes.applicationGuildCommands(clientId, guildId),
+                    { body: commandsJSON },
+                );
+            }
             await rest.put(
                 Routes.applicationCommands(clientId),
                 { body: commandsJSON },
@@ -110,6 +121,16 @@ async function publishCommands(client){
             console.error(error);
         }
     })();
+}
+
+/**
+ * 
+ * @returns {Config} The saved config for the server.
+ */
+function loadConfig(guildID){
+    const filePath = path.join(__dirname, 'configs', `${guildID}.json`);
+    const config = JSON.parse(fs.readFileSync(filePath));
+    return config;
 }
 
 main();
