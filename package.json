@@ -4,7 +4,9 @@
   "description": "Discord bot for interpreting Twitter integration output.",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start-pm2": "pm2 start index.js --interpreter=./node_modules/node/bin/node",
+    "stop-pm2": "pm2 stop all"
   },
   "repository": {
     "type": "git",
