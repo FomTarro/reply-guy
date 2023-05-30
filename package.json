@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "start-pm2": "pm2 start index.js --interpreter=./node_modules/node/bin/node",
-    "stop-pm2": "pm2 stop all"
+    "start-pm2": "pm2 start index.js --interpreter=./node_modules/node/bin/node --name reply-guy",
+    "stop-pm2": "pm2 stop all",
+    "index": "node index.js",
+    "start": "npm run index"
   },
   "repository": {
     "type": "git",
